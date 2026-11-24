@@ -9,6 +9,7 @@ import {
   getGuardianCookie,
   setGuardianCookie,
 } from '#/lib/auth/session.ts'
+import { getAuthenticatedGuardian } from './guardian.server'
 
 export const login = createServerFn({ method: 'POST' })
   .validator((data: { codename: string; password: string }) => data)
@@ -33,24 +34,6 @@ export const logout = createServerFn({ method: 'POST' }).handler(() => {
   return { success: true }
 })
 
-export const getCurrentGuardian = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    const guardianId = getGuardianCookie()
-
-    if (!guardianId) {
-      return null
-    }
-
-    const guardian = db
-      .select({
-        guardianId: guardians.guardianId,
-        codename: guardians.codename,
-        role: guardians.role,
-      })
-      .from(guardians)
-      .where(eq(guardians.guardianId, guardianId))
-      .get()
-
-    return guardian ?? null
-  },
-)
+export const getCurrentGuardian = createServerFn({ method: 'GET' }).handler(() => {
+  return getAuthenticatedGuardian()
+})
