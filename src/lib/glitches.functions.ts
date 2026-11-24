@@ -183,3 +183,38 @@ export const deleteGlitch = createServerFn({ method: 'POST' })
 
     return { success: true }
   })
+
+export const getGlitch = createServerFn({ method: 'GET' })
+  .validator((data: { glitchId: string }) => data)
+  .handler(({ data }) => {
+    const glitch = db
+      .select()
+      .from(glitches)
+      .where(eq(glitches.glitchId, data.glitchId))
+      .get()
+
+    if (!glitch) {
+      return null
+    }
+
+    const glitchEchoes = db
+      .select({
+        echoId: echoes.echoId,
+        description: echoes.description,
+        timestamp: echoes.timestamp,
+        reportingGuardian: guardians.codename,
+      })
+      .from(echoes)
+      .innerJoin(
+        guardians,
+        eq(echoes.reportingGuardianId, guardians.guardianId),
+      )
+      .where(eq(echoes.glitchId, data.glitchId))
+      .orderBy(desc(echoes.timestamp))
+      .all()
+
+    return {
+      ...glitch,
+      echoes: glitchEchoes,
+    }
+  })

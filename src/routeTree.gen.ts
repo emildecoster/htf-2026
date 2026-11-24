@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ReportEchoRouteImport } from './routes/report-echo'
+import { Route as GlitchesGlitchIdRouteImport } from './routes/glitches/$glitchId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const ReportEchoRoute = ReportEchoRouteImport.update({
   path: '/report-echo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GlitchesGlitchIdRoute = GlitchesGlitchIdRouteImport.update({
+  id: '/glitches/$glitchId',
+  path: '/glitches/$glitchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
+  '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
+  '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
+  '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/report-echo'
+  fullPaths: '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/report-echo'
-  id: '__root__' | '/' | '/login' | '/report-echo'
+  to: '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
+  id: '__root__' | '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ReportEchoRoute: typeof ReportEchoRoute
+  GlitchesGlitchIdRoute: typeof GlitchesGlitchIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportEchoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/glitches/$glitchId': {
+      id: '/glitches/$glitchId'
+      path: '/glitches/$glitchId'
+      fullPath: '/glitches/$glitchId'
+      preLoaderRoute: typeof GlitchesGlitchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ReportEchoRoute: ReportEchoRoute,
+  GlitchesGlitchIdRoute: GlitchesGlitchIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
