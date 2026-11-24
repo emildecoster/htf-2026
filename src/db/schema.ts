@@ -16,3 +16,16 @@ export const guardians = sqliteTable('guardians', {
   codename: text('codename').notNull(),
   role: text('role', { enum: GUARDIAN_ROLES }).notNull(),
 })
+
+export const echoes = sqliteTable('echoes', {
+  echoId: text('echo_id').primaryKey(),
+  glitchId: text('glitch_id')
+    .notNull()
+    .references(() => glitches.glitchId),
+  reportingGuardianId: text('reporting_guardian_id')
+    .notNull()
+    .references(() => guardians.guardianId),
+  description: text('description').notNull(),
+  /** ISO 8601, so lexical order is chronological order. */
+  timestamp: text('timestamp').notNull(),
+})
