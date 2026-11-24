@@ -1,59 +1,28 @@
-
 type MagicGaugeProps = {
   magic: number
   activeGlitches: number
 }
 
-export function MagicGauge({
-  magic,
-  activeGlitches,
-}: MagicGaugeProps) {
-  const status =
-    magic >= 75
-      ? 'STABLE'
-      : magic >= 40
-        ? 'UNSTABLE'
-        : 'CRITICAL'
-
-  const color =
-    magic >= 75
-      ? '#22c55e'
-      : magic >= 40
-        ? '#eab308'
-        : '#ef4444'
+export function MagicGauge({ magic, activeGlitches }: MagicGaugeProps) {
+  const status = magic >= 75 ? 'STABLE' : magic >= 40 ? 'UNSTABLE' : 'CRITICAL'
+  const color = magic >= 75 ? '#42e6c1' : magic >= 40 ? '#f6bd60' : '#ff647c'
 
   return (
-    <div className="rounded-xl border border-gray-700 p-6">
-      <h2 className="mb-6 text-xl font-semibold text-fg">
-        Achrona Magic Stability
-      </h2>
-
-      <div className="flex flex-col items-center gap-4">
-        <div
-          className="relative flex h-48 w-48 items-center justify-center rounded-full"
-          style={{
-            background: `conic-gradient(
-              ${color} ${magic}%,
-              #374151 ${magic}%
-            )`,
-          }}
-        >
-          <div className="flex h-40 w-40 flex-col items-center justify-center rounded-full bg-gray-900">
-            <span className="text-4xl font-bold text-white">
-              {magic}%
-            </span>
-            <span
-              className="mt-2 text-sm font-semibold"
-              style={{ color }}
-            >
-              {status}
-            </span>
-          </div>
+    <div className="magic-core">
+      <div className="magic-core-ring" style={{ '--magic-value': `${magic}%`, '--magic-color': color } as React.CSSProperties}>
+        <div className="magic-core-inner">
+          <span className="magic-core-energy energy-one" />
+          <span className="magic-core-energy energy-two" />
+          <span className="magic-core-label">ACHRONA CORE</span>
+          <strong>{magic}<small>%</small></strong>
+          <span className="magic-core-state" style={{ color }}>{status}</span>
         </div>
-
-        <p className="text-sm text-gray-400">
-          {activeGlitches} active glitches
-        </p>
+      </div>
+      <div className="magic-core-caption">
+        <span className="magic-core-live"><i /> CORE REACTOR ONLINE</span>
+        <span className="magic-core-orbit" />
+        <p><strong>{activeGlitches}</strong> active {activeGlitches === 1 ? 'Glitch' : 'Glitches'} affecting grid stability</p>
+        <small>ENERGY RESERVE / REAL-TIME MONITORING</small>
       </div>
     </div>
   )

@@ -42,8 +42,8 @@ export function EchoForm({ glitchId, onSuccess }: EchoFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <label htmlFor="echo-description" className="font-medium">
+    <form onSubmit={handleSubmit} className="echo-form">
+      <label htmlFor="echo-description" className="echo-form-label">
         Description
       </label>
 
@@ -56,11 +56,11 @@ export function EchoForm({ glitchId, onSuccess }: EchoFormProps) {
         required
         maxLength={2000}
         disabled={isSubmitting}
-        className="w-full rounded-lg border border-line bg-background p-3 text-fg"
+        className="echo-form-textarea"
       />
 
       {error && (
-        <p role="alert" className="text-sm text-red-500">
+        <p role="alert" className="echo-form-error">
           {error}
         </p>
       )}
@@ -68,7 +68,7 @@ export function EchoForm({ glitchId, onSuccess }: EchoFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || !description.trim()}
-        className="self-end rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer"
+        className="echo-form-submit"
       >
         {isSubmitting ? 'Reporting...' : 'Report Echo'}
       </button>
