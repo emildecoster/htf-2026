@@ -1,6 +1,7 @@
 import { logout } from '#/lib/auth/auth.functions'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {Activity, LayoutGrid, LogOut, type LucideIcon} from 'lucide-react'
+import { useState } from 'react'
 
 type NavItem = {
   label: string
@@ -20,10 +21,21 @@ const activeClass = 'bg-white/10 text-white'
 
 export function Sidebar() {
     const navigate = useNavigate()
+    const [loggingOut, setLoggingOut] = useState(false)
+    const [logoutError, setLogoutError] = useState(false)
 
     async function handleLogout() {
-      await logout()
-      await navigate({ to: '/login' })
+      if (loggingOut) return
+      setLoggingOut(true)
+      setLogoutError(false)
+      try {
+        const result = await logout()
+        if (!result?.success) throw new Error('Logout failed')
+        await navigate({ to: '/login', replace: true })
+      } catch {
+        setLogoutError(true)
+        setLoggingOut(false)
+      }
     }
 
   return (
@@ -56,11 +68,14 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar-bottom">
+        {logoutError && <span className="logout-error" role="alert">Sign out failed. Try again.</span>}
         <button
           type="button"
           onClick={handleLogout}
           aria-label="Logout"
-          title="Logout"
+          title={loggingOut ? 'Signing out…' : 'Sign out'}
+          disabled={loggingOut}
+          aria-busy={loggingOut}
           className="sidebar-logout"
         >
           <LogOut className="size-5" />
