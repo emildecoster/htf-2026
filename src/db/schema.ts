@@ -32,3 +32,14 @@ export const echoes = sqliteTable('echoes', {
   /** ISO 8601, so lexical order is chronological order. */
   timestamp: text('timestamp').notNull(),
 })
+
+export const echoAttachments = sqliteTable('echo_attachments', {
+  attachmentId: text('attachment_id').primaryKey(),
+  echoId: text('echo_id')
+    .notNull()
+    .references(() => echoes.echoId, { onDelete: 'cascade' }),
+  fileName: text('file_name').notNull(),
+  filePath: text('file_path').notNull(),
+  mimeType: text('mime_type').notNull(),
+  timestamp: text('timestamp').notNull(),
+})

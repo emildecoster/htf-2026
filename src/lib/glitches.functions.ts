@@ -3,7 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { desc, eq } from 'drizzle-orm'
 
 import { db } from '#/db/index.ts'
-import { glitches, echoes, guardians } from '#/db/schema.ts'
+import { glitches, echoes, guardians, echoAttachments } from '#/db/schema.ts'
 import type { Glitch, GlitchStatus } from '#/lib/glitch.ts'
 import { getCurrentGuardian } from '#/lib/auth/auth.functions.ts'
 
@@ -224,8 +224,28 @@ export const getGlitch = createServerFn({ method: 'GET' })
       .orderBy(desc(echoes.timestamp))
       .all()
 
+    const glitchAttachments = db
+      .select({
+        attachmentId: echoAttachments.attachmentId,
+        echoId: echoAttachments.echoId,
+        fileName: echoAttachments.fileName,
+        mimeType: echoAttachments.mimeType,
+      })
+      .from(echoAttachments)
+      .innerJoin(
+        echoes,
+        eq(echoAttachments.echoId, echoes.echoId),
+      )
+      .where(eq(echoes.glitchId, data.glitchId))
+      .all()
+
     return {
       ...glitch,
-      echoes: glitchEchoes,
+      echoes: glitchEchoes.map((echo) => ({
+        ...echo,
+        attachments: glitchAttachments.filter(
+          (attachment) => attachment.echoId === echo.echoId,
+        ),
+      })),
     }
   })
