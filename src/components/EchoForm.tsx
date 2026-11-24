@@ -24,11 +24,20 @@ export function EchoForm({ glitchId, onSuccess }: EchoFormProps) {
     setError(null)
 
     try {
+      const formData = new FormData()
+
+      formData.append('description', description)
+
+      if (glitchId) {
+        formData.append('glitchId', glitchId)
+      }
+
+      // for (const image of images) {
+      //   formData.append('images', image)
+      // }
+
       const result = await createEcho({
-        data: {
-          description: trimmedDescription,
-          glitchId,
-        },
+        data: formData,
       })
 
       setDescription('')
