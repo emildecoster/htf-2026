@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ReportEchoRouteImport } from './routes/report-echo'
 import { Route as GlitchesGlitchIdRouteImport } from './routes/glitches/$glitchId'
+import { Route as ApiEchoAttachmentsAttachmentIdRouteImport } from './routes/api/echo-attachments/$attachmentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,26 @@ const GlitchesGlitchIdRoute = GlitchesGlitchIdRouteImport.update({
   path: '/glitches/$glitchId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiEchoAttachmentsAttachmentIdRoute =
+  ApiEchoAttachmentsAttachmentIdRouteImport.update({
+    id: '/api/echo-attachments/$attachmentId',
+    path: '/api/echo-attachments/$attachmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
   '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
+  '/api/echo-attachments/$attachmentId': typeof ApiEchoAttachmentsAttachmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
   '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
+  '/api/echo-attachments/$attachmentId': typeof ApiEchoAttachmentsAttachmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +62,30 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/report-echo': typeof ReportEchoRoute
   '/glitches/$glitchId': typeof GlitchesGlitchIdRoute
+  '/api/echo-attachments/$attachmentId': typeof ApiEchoAttachmentsAttachmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/report-echo'
+    | '/glitches/$glitchId'
+    | '/api/echo-attachments/$attachmentId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
-  id: '__root__' | '/' | '/login' | '/report-echo' | '/glitches/$glitchId'
+  to:
+    | '/'
+    | '/login'
+    | '/report-echo'
+    | '/glitches/$glitchId'
+    | '/api/echo-attachments/$attachmentId'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/report-echo'
+    | '/glitches/$glitchId'
+    | '/api/echo-attachments/$attachmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +93,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ReportEchoRoute: typeof ReportEchoRoute
   GlitchesGlitchIdRoute: typeof GlitchesGlitchIdRoute
+  ApiEchoAttachmentsAttachmentIdRoute: typeof ApiEchoAttachmentsAttachmentIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GlitchesGlitchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/echo-attachments/$attachmentId': {
+      id: '/api/echo-attachments/$attachmentId'
+      path: '/api/echo-attachments/$attachmentId'
+      fullPath: '/api/echo-attachments/$attachmentId'
+      preLoaderRoute: typeof ApiEchoAttachmentsAttachmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +141,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ReportEchoRoute: ReportEchoRoute,
   GlitchesGlitchIdRoute: GlitchesGlitchIdRoute,
+  ApiEchoAttachmentsAttachmentIdRoute: ApiEchoAttachmentsAttachmentIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

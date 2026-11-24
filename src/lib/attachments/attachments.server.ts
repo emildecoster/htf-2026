@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { mkdir, unlink, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
+import { isAbsolute, join, relative, resolve } from 'node:path'
 
 const UPLOAD_DIRECTORY = join(process.cwd(), 'uploads', 'echoes')
 
@@ -85,4 +85,20 @@ export async function storeImage(file: File): Promise<StoredImage> {
 
 export async function deleteStoredImage(filePath: string) {
   await unlink(filePath)
+}
+
+export async function readStoredImage(filePath: string): Promise<Buffer> {
+  const resolvedPath = resolve(filePath)
+  const relativePath = relative(UPLOAD_DIRECTORY, resolvedPath)
+
+  // Only allow files inside the upload directory.
+  if (
+    !relativePath ||
+    relativePath.startsWith('..') ||
+    isAbsolute(relativePath)
+  ) {
+    throw new Error('Invalid image path.')
+  }
+
+  return readFile(resolvedPath)
 }
