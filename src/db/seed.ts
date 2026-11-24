@@ -24,15 +24,15 @@ const echoRows: (typeof echoes.$inferInsert)[] = [
 
 // Wipe and refill so the seed can be re-run safely.
 db.transaction((tx) => {
-  tx.delete(glitches).run()
-  tx.insert(glitches).values(glitchRows).run()
-
-  tx.delete(guardians).run()
-  tx.insert(guardians).values(guardianRows).run()
-
   tx.delete(echoes).run()
+  tx.delete(guardians).run()
+  tx.delete(glitches).run()
+
+  tx.insert(glitches).values(glitchRows).run()
+  tx.insert(guardians).values(guardianRows).run()
   tx.insert(echoes).values(echoRows).run()
 })
 
 console.log(`Seeded ${glitchRows.length} glitches.`)
 console.log(`Seeded ${guardianRows.length} guardians.`)
+console.log(`Seeded ${echoRows.length} echoes.`)
