@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 import { EchoForm } from '#/components/EchoForm.tsx'
 import { getCurrentGuardian } from '#/lib/auth/auth.functions.ts'
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/report-echo')({
 })
 
 function ReportEchoPage() {
-  const router = useRouter()
+  const navigate = useNavigate()
 
   return (
     <div className="report-page">
@@ -43,9 +43,11 @@ function ReportEchoPage() {
             <span className="report-live"><i /> SECURE</span>
           </div>
           <EchoForm
-            onSuccess={async () => {
-              await router.invalidate()
-              await router.navigate({ to: '/', replace: true })
+            onSuccess={({ glitchId }) => {
+              navigate({
+                to: '/glitches/$glitchId',
+                params: { glitchId },
+              })
             }}
           />
         </section>
