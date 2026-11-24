@@ -5,12 +5,13 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { RadioTower, X } from 'lucide-react'
 
 import { EchoForm } from '#/components/EchoForm.tsx'
 import { getCurrentGuardian } from '#/lib/auth/auth.functions.ts'
 import { getGlitch } from '#/lib/glitches.functions.ts'
+import { AuthenticatedImage } from '#/components/ui/AuthenticatedImage'
 
 export const Route = createFileRoute('/glitches/$glitchId')({
   beforeLoad: async () => {
@@ -39,7 +40,22 @@ export const Route = createFileRoute('/glitches/$glitchId')({
 function GlitchPage() {
   const { glitch } = Route.useLoaderData()
   const router = useRouter()
+
   const echoDialogRef = useRef<HTMLDialogElement>(null)
+  const imageDialogRef = useRef<HTMLDialogElement>(null)
+
+  const [selectedImage, setSelectedImage] = useState<{
+    attachmentId: string
+    fileName: string
+  } | null>(null)
+
+  function openImage(attachment: {
+    attachmentId: string
+    fileName: string
+  }) {
+    setSelectedImage(attachment)
+    imageDialogRef.current?.showModal()
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -47,7 +63,7 @@ function GlitchPage() {
       <header className="flex flex-col gap-3">
         <Link
           to="/"
-          className="w-fit mb-4 text-sm text-muted transition-colors hover:text-fg"
+          className="mb-4 w-fit text-sm text-muted transition-colors hover:text-fg"
         >
           ← Back to overview
         </Link>
@@ -126,10 +142,31 @@ function GlitchPage() {
                 <div className="absolute left-0 top-1.5 size-[11px] rounded-full border-2 border-accent bg-panel" />
 
                 {/* Echo content */}
-                <div className="ml-7 flex flex-col gap-2">
+                <div className="ml-7 flex flex-col gap-3">
                   <p className="text-base leading-relaxed text-fg">
                     {echo.description}
                   </p>
+
+                  {/* Image attachments */}
+                  {echo.attachments.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {echo.attachments.map((attachment) => (
+                        <button
+                          key={attachment.attachmentId}
+                          type="button"
+                          onClick={() => openImage(attachment)}
+                          aria-label={`View image: ${attachment.fileName}`}
+                          className="group overflow-hidden rounded-lg border border-line bg-card text-left hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
+                        >
+                          <AuthenticatedImage
+                            attachmentId={attachment.attachmentId}
+                            alt={attachment.fileName}
+                            className="aspect-video w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-medium text-muted">
@@ -191,6 +228,36 @@ function GlitchPage() {
             />
           </div>
         </div>
+      </dialog>
+
+      {/* Image preview dialog */}
+      <dialog
+        ref={imageDialogRef}
+        aria-label="Image preview"
+        className="m-auto w-[calc(100%-2rem)] max-w-4xl rounded-xl border border-line bg-panel p-3 text-fg shadow-2xl backdrop:bg-black/80"
+      >
+        <div className="flex items-center justify-between gap-4 pb-3">
+          <p className="truncate text-sm font-medium text-fg">
+            {selectedImage?.fileName}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => imageDialogRef.current?.close()}
+            aria-label="Close image preview"
+            className="shrink-0 rounded-lg p-2 text-muted transition-colors hover:bg-subtle hover:text-fg hover:cursor-pointer"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {selectedImage && (
+          <AuthenticatedImage
+            attachmentId={selectedImage.attachmentId}
+            alt={selectedImage.fileName}
+            className="mx-auto max-h-[75vh] max-w-full rounded-lg object-contain"
+          />
+        )}
       </dialog>
     </div>
   )
