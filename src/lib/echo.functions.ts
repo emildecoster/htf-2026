@@ -5,6 +5,11 @@ import { db } from '#/db/index.ts'
 import { echoes, glitches } from '#/db/schema.ts'
 import { getAuthenticatedGuardian } from './auth/guardian.server'
 
+function generateGlitchId(): string {
+  const number = Math.floor(Math.random() * 9000) + 1000
+  return `GL-${number}`
+}
+
 export const createEcho = createServerFn({ method: 'POST' })
   .validator(
     (data: { description: string; glitchId?: string }) => ({
@@ -25,7 +30,7 @@ export const createEcho = createServerFn({ method: 'POST' })
 
     const timestamp = new Date().toISOString()
     const echoId = crypto.randomUUID()
-    const glitchId = data.glitchId ?? crypto.randomUUID()
+    const glitchId = data.glitchId ?? generateGlitchId()
 
     return db.transaction((tx) => {
       if (data.glitchId) {
