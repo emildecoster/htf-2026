@@ -1,27 +1,25 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+
+import { createFileRoute } from '@tanstack/react-router'
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
 import { MagicGauge } from '#/components/MagicGauge.tsx'
 import { getGlitches } from '#/lib/glitches.functions.ts'
+import { getCurrentGuardian } from '#/lib/auth/auth.functions.ts'
 import { calculateMagic } from '#/lib/magic.ts'
-import { getCurrentGuardian } from '#/lib/auth/auth.functions'
 
 export const Route = createFileRoute('/')({
-  beforeLoad: async () => {
-    const guardian = await getCurrentGuardian()
+  loader: async () => {
+    const [glitches, guardian] = await Promise.all([
+      getGlitches(),
+      getCurrentGuardian(),
+    ])
 
-    if (!guardian) {
-      throw redirect({ to: '/login' })
-    }
-
-    return { guardian }
+    return { glitches, guardian }
   },
-  loader: () => getGlitches(),
   component: OverviewPage,
 })
 
 function OverviewPage() {
-  const glitches = Route.useLoaderData()
-  const { guardian } = Route.useRouteContext()
+  const { glitches, guardian } = Route.useLoaderData()
 
   const magic = calculateMagic(glitches)
 
@@ -30,21 +28,20 @@ function OverviewPage() {
   ).length
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-heading">
-        <div>
-          <p className="dashboard-kicker">Guardian network / Achrona</p>
-          <h1 className="dashboard-title">Welcome, <span>{guardian.codename}</span></h1>
-          <p className="dashboard-subtitle">Here is the current state of the grid.</p>
-        </div>
-      </header>
+    <div className="flex flex-col gap-8">
+      <h1 className="text-3xl font-semibold text-fg">
+        Overview
+      </h1>
 
       <MagicGauge
         magic={magic}
         activeGlitches={activeGlitches}
       />
 
-      <GlitchesTable glitches={glitches} />
+      <GlitchesTable
+        glitches={glitches}
+        isCommander={guardian?.role === 'COMMANDER'}
+      />
     </div>
   )
 }
