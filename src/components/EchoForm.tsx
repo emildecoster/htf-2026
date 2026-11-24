@@ -68,7 +68,7 @@ export function EchoForm({ glitchId, onSuccess }: EchoFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || !description.trim()}
-        className="self-end rounded-lg bg-primary px-4 py-2 text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="self-end rounded-lg bg-accent px-4 py-2 text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer"
       >
         {isSubmitting ? 'Reporting...' : 'Report Echo'}
       </button>
