@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '#/db/index.ts'
 import { echoes, glitches, guardians } from '#/db/schema.ts'
-import { getGuardianCookie } from '#/lib/auth/session.ts'
+import { getGuardianCookie } from '#/lib/auth/session.server'
 import { getAuthenticatedGuardian } from './auth/guardian.server'
 
 export const createEcho = createServerFn({ method: 'POST' })

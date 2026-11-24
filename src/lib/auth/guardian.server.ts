@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '#/db/index.ts'
 import { guardians } from '#/db/schema.ts'
 import type { Guardian } from '#/lib/guardian.ts'
-import { getGuardianCookie } from './session.ts'
+import { getGuardianCookie } from './session.server.ts'
 
 export function getAuthenticatedGuardian(): Guardian | null {
   const guardianId = getGuardianCookie()
