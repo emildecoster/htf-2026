@@ -17,13 +17,7 @@ export const Route = createFileRoute(
 )({
   server: {
     handlers: {
-      GET: async ({ request, params }) => {
-        console.log('Image request:', {
-          attachmentId: params.attachmentId,
-          destination: request.headers.get('sec-fetch-dest'),
-          accept: request.headers.get('accept'),
-        })
-
+      GET: async ({ params }) => {
         // Authentication
         const guardian = getAuthenticatedGuardian()
 
