@@ -727,3 +727,72 @@ body[data-theme="dark"] {
 .offline-glitch-list article p { margin: 3px 0 10px; font-size: 13px; }
 .offline-glitch-list article small { opacity: .7; font-size: 11px; }
 html[data-network="offline"] .sidebar-link[href="/report-echo"] { opacity: .38; pointer-events: none; cursor: not-allowed; }
+
+/* Mobile layouts for the mission control screens */
+@media (max-width: 760px) {
+  .app-shell { min-height: 100svh; flex-direction: column; padding-bottom: calc(4.2rem + env(safe-area-inset-bottom)); }
+  .app-main { width: 100%; min-width: 0; padding: 1rem .85rem 1.5rem; }
+  .sidebar { position: fixed; z-index: 40; inset: auto 0 0; display: flex; width: 100%; height: calc(4.2rem + env(safe-area-inset-bottom)); flex-direction: row; align-items: center; justify-content: space-around; gap: .35rem; padding: .4rem .65rem calc(.4rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--nav-border); border-right: 0; background: var(--nav-bg-end); box-shadow: 0 -8px 28px rgb(0 0 0 / .24); }
+  .sidebar-brand, .sidebar-section-label, .sidebar-status { display: none; }
+  .sidebar-nav { display: flex; width: auto; flex: 1; flex-direction: row; justify-content: center; gap: .45rem; }
+  .sidebar-link, .sidebar-nav-disabled { display: grid; width: 3rem; height: 3rem; flex: none; place-items: center; padding: 0; border-radius: .8rem; }
+  .sidebar-link span, .sidebar-nav-disabled span, .sidebar-nav-disabled small, .sidebar-logout span { display: none; }
+  .sidebar-link-indicator { top: .3rem; right: .3rem; width: .35rem; height: .35rem; }
+  .sidebar-bottom { display: flex; align-items: center; margin: 0; }
+  .sidebar-logout { display: grid; width: 3rem; height: 3rem; place-items: center; padding: 0; }
+  .logout-error { right: .75rem; bottom: calc(4.65rem + env(safe-area-inset-bottom)); left: auto; }
+  .theme-toggle { top: max(.7rem, env(safe-area-inset-top)); right: .75rem; width: 2.75rem; height: 2.75rem; }
+
+  .mission-dashboard { width: 100%; gap: 1rem; }
+  .mission-header { min-height: 5.2rem; justify-content: flex-start; padding: 2.8rem .15rem .35rem; }
+  .mission-header > div:first-child { min-width: 0; }
+  .mission-header .dashboard-title { max-width: 100%; font-size: clamp(1.65rem, 7vw, 2.2rem); line-height: 1.08; overflow-wrap: anywhere; }
+  .mission-header .dashboard-subtitle { max-width: 34ch; font-size: .83rem; line-height: 1.5; }
+  .mission-identity { width: 100%; min-width: 0; }
+  .mission-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .mission-stat { min-width: 0; min-height: 5rem; gap: .6rem; padding: .7rem; }
+  .mission-stat strong { font-size: clamp(1.2rem, 6vw, 1.55rem); }
+  .mission-stat span { font-size: .58rem; line-height: 1.3; }
+  .mission-alert-banner { display: grid; grid-template-columns: auto 1fr; gap: .7rem; padding: .85rem; }
+  .mission-alert-copy { min-width: 0; }
+  .mission-alert-copy small { display: block; line-height: 1.5; overflow-wrap: anywhere; }
+  .mission-alert-active { grid-column: 2; justify-self: start; }
+  .mission-overview-grid, .mission-side-panel { grid-template-columns: minmax(0, 1fr); }
+  .mission-gauge-surface, .mission-info-card, .mission-briefing, .threat-radar-panel, .achrona-map-panel { min-width: 0; padding: 1rem; }
+  .mission-glitches-surface { min-width: 0; }
+  .mission-table-heading { padding: 1rem; }
+  .mission-table-heading .section-heading { align-items: flex-start; gap: .65rem; }
+  .mission-table-heading > p { margin-top: .55rem; font-size: .8rem; line-height: 1.5; }
+  .mission-glitches-surface > section { min-width: 0; padding: .65rem; }
+  .mission-glitches-surface > section > div:first-child { max-width: 100%; }
+  .mission-glitches-surface table { min-width: 720px; }
+  .mission-glitches-surface th, .mission-glitches-surface td { padding: .7rem .65rem; }
+  .mission-glitches-surface input, .mission-glitches-surface select { min-height: 2.75rem; font-size: .9rem; }
+  .mission-glitches-surface button { min-height: 2.65rem; }
+  .achrona-map-canvas { min-height: clamp(250px, 76vw, 340px); }
+  .achrona-map-popup { top: .6rem; right: .6rem; }
+  .threat-radar-layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: .4rem 0 0; }
+  .threat-radar-screen { width: min(100%, 17rem); }
+  .radar-readout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .radar-readout p { grid-column: 1 / -1; }
+  .login-page-scifi { min-height: 100svh; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; padding: 5rem 1rem 2rem; }
+  .login-showcase { width: 100%; }
+  .login-showcase h1 { font-size: clamp(2.35rem, 11vw, 3.5rem); }
+  .login-card-scifi { width: 100%; max-width: 28rem; }
+}
+
+@media (max-width: 420px) {
+  .app-main { padding-inline: .65rem; }
+  .mission-dashboard { gap: .8rem; }
+  .mission-header .dashboard-kicker { font-size: .55rem; letter-spacing: .1em; }
+  .mission-stats { gap: .4rem; }
+  .mission-stat { min-height: 4.5rem; padding: .55rem; }
+  .mission-stat-icon { width: 1.85rem; height: 1.85rem; }
+  .mission-stat strong { font-size: 1.18rem; }
+  .mission-stat span { font-size: .52rem; }
+  .mission-glitches-surface > section { padding: .45rem; }
+  .table-count { white-space: nowrap; }
+  .achrona-map-legend { gap: .45rem; }
+  .achrona-map-legend > span { font-size: .58rem; }
+  .login-card-scifi { padding: 1.1rem; }
+}

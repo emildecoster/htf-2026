@@ -49,6 +49,7 @@ type Props = {
   glitches: Glitch[]
   isCommander: boolean
   currentGuardianId: string | null
+  onRefresh: () => Promise<void>
 }
 
 type Defender = {
@@ -69,6 +70,7 @@ export function GlitchesTable({
   glitches,
   isCommander,
   currentGuardianId,
+  onRefresh,
 }: Props) {
   const router = useRouter()
 
@@ -221,7 +223,7 @@ export function GlitchesTable({
         return updated
       })
 
-      await router.invalidate()
+      await onRefresh()
     } catch (err) {
       console.error('Failed to update Glitch:', err)
       setError(`Could not update ${glitchId}. Please try again.`)

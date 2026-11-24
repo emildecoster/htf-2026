@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Activity, AlertTriangle, CheckCircle2, RadioTower, Users, BellRing } from 'lucide-react'
 
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
@@ -19,34 +19,37 @@ export const Route = createFileRoute('/')({ component: OverviewPage })
 
 function OverviewPage() {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null)
-  const [isOffline, setIsOffline] = useState(
-    typeof navigator !== 'undefined' ? !navigator.onLine : false,
-  )
+  // Keep the first render identical on the server and client.
+  // The real network state is read in the effect after hydration.
+  const [isOffline, setIsOffline] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  const refresh = useCallback(async () => {
+    if (!navigator.onLine) { setIsOffline(true); return }
+    setIsRefreshing(true)
+    try {
+      const [glitches, guardian] = await Promise.all([getGlitches(), getCurrentGuardian()])
+      if (guardian) {
+        const next = { glitches, guardian, savedAt: new Date().toISOString() }
+        window.localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(next))
+        setSnapshot(next)
+      }
+      setIsOffline(false)
+    } catch {
+      setIsOffline(true)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [])
+
   useEffect(() => {
+    // Read browser-only state after hydration to avoid SSR/client markup mismatch.
+    setIsOffline(!navigator.onLine)
     const cached = window.localStorage.getItem(OFFLINE_CACHE_KEY)
     if (cached) {
       try { setSnapshot(JSON.parse(cached) as DashboardSnapshot) } catch { /* Ignore an invalid old cache. */ }
     }
 
-    const refresh = async () => {
-      if (!navigator.onLine) { setIsOffline(true); return }
-      setIsRefreshing(true)
-      try {
-        const [glitches, guardian] = await Promise.all([getGlitches(), getCurrentGuardian()])
-        if (guardian) {
-          const next = { glitches, guardian, savedAt: new Date().toISOString() }
-          window.localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(next))
-          setSnapshot(next)
-        }
-        setIsOffline(false)
-      } catch {
-        setIsOffline(true)
-      } finally {
-        setIsRefreshing(false)
-      }
-    }
     const handleOnline = () => { setIsOffline(false); void refresh() }
     const handleOffline = () => setIsOffline(true)
     window.addEventListener('online', handleOnline)
@@ -56,7 +59,7 @@ function OverviewPage() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, [refresh])
 
   const glitches = snapshot?.glitches ?? []
   const guardian = snapshot?.guardian ?? null
@@ -174,7 +177,7 @@ function OverviewPage() {
             {glitches.map((glitch) => <article key={glitch.glitchId}><strong>{glitch.glitchId}</strong><span>{glitch.status}</span><p>{glitch.description}</p><small>Assigned to: {glitch.assignedGuardianCodename ?? 'Unassigned'}</small></article>)}
           </div>
         ) : (
-          <GlitchesTable glitches={glitches} isCommander={isCommander} currentGuardianId={guardian?.guardianId ?? null} />
+          <GlitchesTable glitches={glitches} isCommander={isCommander} currentGuardianId={guardian?.guardianId ?? null} onRefresh={refresh} />
         )}
       </section>
     </div>
