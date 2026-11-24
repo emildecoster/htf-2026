@@ -1,4 +1,3 @@
-
 import { createFileRoute } from '@tanstack/react-router'
 
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
