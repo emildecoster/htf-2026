@@ -1,6 +1,6 @@
 
 import { useMemo, useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import {
   EllipsisVertical,
   ArrowRight,
@@ -18,6 +18,7 @@ import {
   CalendarDays,
   ArrowUpDown,
   X,
+  MessageSquare,
 } from 'lucide-react'
 
 import { IconButton } from '#/components/ui/IconButton.tsx'
@@ -70,6 +71,8 @@ export function GlitchesTable({
   currentGuardianId,
 }: Props) {
   const router = useRouter()
+
+  const navigate = useNavigate()
 
   // Action menu
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -466,7 +469,7 @@ export function GlitchesTable({
         </div>
 
         {/* Assigned only checkbox */}
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface px-3 py-3 text-sm transition-colors hover:bg-surface-hover">
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface px-3 py-3 text-sm transition-colors transition-colors hover:bg-subtle hover:cursor-pointer">
           <input
             type="checkbox"
             checked={showAssignedOnly}
@@ -568,7 +571,7 @@ export function GlitchesTable({
               return (
                 <tr
                   key={glitch.glitchId}
-                  className={`border-b border-line transition-colors hover:bg-surface-hover ${
+                  className={`border-b border-line transition-colors transition-colors hover:bg-subtle hover:cursor-pointer ${
                     isAssignedToMe ? 'bg-blue-500/[0.035]' : ''
                   }`}
                 >
@@ -625,7 +628,7 @@ export function GlitchesTable({
                               ? `Advance ${glitch.glitchId} to ${nextStatus}`
                               : `${glitch.glitchId} is already fixed`
                           }
-                          className="rounded-md p-1.5 transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-30"
+                          className="rounded-md p-1.5 transition-colors transition-colors hover:bg-subtle hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           {isUpdating ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -657,6 +660,7 @@ export function GlitchesTable({
                       <IconButton
                         aria-label={`${glitch.glitchId} actions`}
                         aria-expanded={isOpen}
+                        className="transition-colors hover:bg-subtle hover:cursor-pointer"
                         onClick={() => {
                           if (isOpen) {
                             closeMenu()
@@ -682,7 +686,7 @@ export function GlitchesTable({
                                 <button
                                   type="button"
                                   onClick={() => setMenuPage('status')}
-                                  className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
+                                  className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-subtle hover:cursor-pointer"
                                 >
                                   <span className="flex items-center gap-3">
                                     <RefreshCw className="size-4 text-blue-500" />
@@ -697,7 +701,7 @@ export function GlitchesTable({
                                   <button
                                     type="button"
                                     onClick={handleOpenAssignment}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-subtle hover:cursor-pointer"
                                   >
                                     <span className="flex items-center gap-3">
                                       <UserPlus className="size-4 text-muted" />
@@ -710,10 +714,28 @@ export function GlitchesTable({
                                 </>
                               )}
 
+                              {/* VIEW ECHOES */}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate({
+                                    to: '/glitches/$glitchId',
+                                    params: { glitchId: glitch.glitchId },
+                                  })
+                                }
+                                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-subtle hover:cursor-pointer"
+                              >
+                                <span className="flex items-center gap-3">
+                                  <MessageSquare className="size-4 text-muted" />
+                                  View Echoes
+                                </span>
+                                <ChevronRight className="size-4 text-muted" />
+                              </button>
+
                               <button
                                 type="button"
                                 onClick={() => setMenuPage('details')}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
+                                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-subtle hover:cursor-pointer"
                               >
                                 <span className="flex items-center gap-3">
                                   <Eye className="size-4 text-muted" />
@@ -879,7 +901,7 @@ export function GlitchesTable({
                                         className={`flex w-full items-center justify-between rounded-lg border px-3 py-3 text-sm transition-colors ${
                                           isAssigned
                                             ? 'border-blue-500/40 bg-blue-500/10 text-blue-500'
-                                            : 'border-line hover:bg-surface-hover'
+                                            : 'border-line transition-colors hover:bg-subtle hover:cursor-pointer'
                                         } disabled:cursor-not-allowed disabled:opacity-70`}
                                       >
                                         <span>{defender.codename}</span>
@@ -1025,7 +1047,7 @@ export function GlitchesTable({
                                   type="button"
                                   disabled={isUpdating}
                                   onClick={() => setMenuPage('main')}
-                                  className="flex-1 rounded-lg border border-line px-3 py-2 text-xs font-medium hover:bg-surface-hover disabled:opacity-50"
+                                  className="flex-1 rounded-lg border border-line px-3 py-2 text-xs font-medium transition-colors hover:bg-subtle hover:cursor-pointer disabled:opacity-50"
                                 >
                                   Cancel
                                 </button>
