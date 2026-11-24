@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   EllipsisVertical,
@@ -13,6 +13,11 @@ import {
   Eye,
   Trash2,
   AlertTriangle,
+  Search,
+  SlidersHorizontal,
+  CalendarDays,
+  ArrowUpDown,
+  X,
 } from 'lucide-react'
 
 import { IconButton } from '#/components/ui/IconButton.tsx'
@@ -44,18 +49,110 @@ type Props = {
 
 type MenuPage = 'main' | 'status' | 'delete' | 'details'
 
+type SortOption =
+  | 'newest'
+  | 'oldest'
+  | 'id-asc'
+  | 'id-desc'
+  | 'status'
+
 export function GlitchesTable({ glitches, isCommander }: Props) {
   const router = useRouter()
 
+  // Action menu
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [menuPage, setMenuPage] = useState<MenuPage>('main')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
+  // Status slider
   const [selectedStatuses, setSelectedStatuses] = useState<
     Record<string, GlitchStatus>
   >({})
 
+  // Search and filters
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<
+    GlitchStatus | 'ALL'
+  >('ALL')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
+
+  const [error, setError] = useState<string | null>(null)
+
+  // Search, filter and sort Glitches
+  const filteredGlitches = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+
+    const result = glitches.filter((glitch) => {
+      const matchesSearch =
+        !query ||
+        glitch.glitchId.toLowerCase().includes(query) ||
+        glitch.description.toLowerCase().includes(query) ||
+        glitch.status.toLowerCase().includes(query)
+
+      const matchesStatus =
+        statusFilter === 'ALL' || glitch.status === statusFilter
+
+      // Timestamps are stored as ISO 8601 strings.
+      const glitchDate = glitch.timestamp.slice(0, 10)
+
+      const matchesStartDate =
+        !startDate || glitchDate >= startDate
+
+      const matchesEndDate =
+        !endDate || glitchDate <= endDate
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesStartDate &&
+        matchesEndDate
+      )
+    })
+
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return b.timestamp.localeCompare(a.timestamp)
+
+        case 'oldest':
+          return a.timestamp.localeCompare(b.timestamp)
+
+        case 'id-asc':
+          return a.glitchId.localeCompare(b.glitchId)
+
+        case 'id-desc':
+          return b.glitchId.localeCompare(a.glitchId)
+
+        case 'status':
+          return (
+            GLITCH_STATUSES.indexOf(a.status) -
+            GLITCH_STATUSES.indexOf(b.status)
+          )
+
+        default:
+          return 0
+      }
+    })
+  }, [glitches, searchQuery, statusFilter, startDate, endDate, sortBy])
+
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    statusFilter !== 'ALL' ||
+    startDate !== '' ||
+    endDate !== '' ||
+    sortBy !== 'newest'
+
+  function clearFilters() {
+    setSearchQuery('')
+    setStatusFilter('ALL')
+    setStartDate('')
+    setEndDate('')
+    setSortBy('newest')
+  }
+
+  // Update status
   async function handleStatusChange(
     glitchId: string,
     status: GlitchStatus,
@@ -85,6 +182,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
     }
   }
 
+  // Quick next status
   async function handleNextStatus(glitch: Glitch) {
     const currentIndex = GLITCH_STATUSES.indexOf(glitch.status)
 
@@ -101,6 +199,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
     )
   }
 
+  // Delete Glitch
   async function handleDeleteGlitch(glitchId: string) {
     setUpdatingId(glitchId)
     setError(null)
@@ -134,6 +233,8 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
   return (
     <section className="flex flex-col gap-6">
+
+      {/* Error message */}
       {error && (
         <div
           role="alert"
@@ -151,6 +252,161 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
         </div>
       )}
 
+      {/* SEARCH AND FILTERS */}
+      <div className="flex flex-col gap-4 rounded-xl border border-line bg-app p-4">
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by ID, description or status..."
+            className="w-full rounded-lg border border-line bg-surface py-3 pl-10 pr-10 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-blue-500"
+          />
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter controls */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+          {/* Status filter */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="status-filter"
+              className="flex items-center gap-2 text-xs font-medium text-muted"
+            >
+              <SlidersHorizontal className="size-3.5" />
+              Status
+            </label>
+
+            <select
+              id="status-filter"
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(
+                  event.target.value as GlitchStatus | 'ALL',
+                )
+              }
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg outline-none focus:border-blue-500"
+            >
+              <option value="ALL">All statuses</option>
+
+              {GLITCH_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Start date */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="start-date"
+              className="flex items-center gap-2 text-xs font-medium text-muted"
+            >
+              <CalendarDays className="size-3.5" />
+              From date
+            </label>
+
+            <input
+              id="start-date"
+              type="date"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg outline-none focus:border-blue-500"
+            />
+          </div>
+
+          {/* End date */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="end-date"
+              className="flex items-center gap-2 text-xs font-medium text-muted"
+            >
+              <CalendarDays className="size-3.5" />
+              To date
+            </label>
+
+            <input
+              id="end-date"
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg outline-none focus:border-blue-500"
+            />
+          </div>
+
+          {/* Sorting */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="sort-by"
+              className="flex items-center gap-2 text-xs font-medium text-muted"
+            >
+              <ArrowUpDown className="size-3.5" />
+              Sort by
+            </label>
+
+            <select
+              id="sort-by"
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(event.target.value as SortOption)
+              }
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg outline-none focus:border-blue-500"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="id-asc">ID (A–Z)</option>
+              <option value="id-desc">ID (Z–A)</option>
+              <option value="status">Status order</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Filter summary */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+          <p className="text-xs text-muted">
+            Showing{' '}
+            <span className="font-semibold text-fg">
+              {filteredGlitches.length}
+            </span>{' '}
+            of{' '}
+            <span className="font-semibold text-fg">
+              {glitches.length}
+            </span>{' '}
+            glitches
+          </p>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex items-center gap-2 text-xs font-medium text-blue-500 transition-colors hover:text-blue-400"
+            >
+              <X className="size-3.5" />
+              Clear filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* GLITCH TABLE */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] text-left">
           <thead>
@@ -169,7 +425,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
           </thead>
 
           <tbody className="text-fg">
-            {glitches.map((glitch) => {
+            {filteredGlitches.map((glitch) => {
               const isOpen = openMenu === glitch.glitchId
               const isUpdating = updatingId === glitch.glitchId
 
@@ -204,7 +460,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                     {glitch.description}
                   </td>
 
-                  {/* Status + Next Arrow */}
+                  {/* Status + Arrow */}
                   <td className="px-5 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <span
@@ -254,7 +510,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                     </time>
                   </td>
 
-                  {/* Action Menu */}
+                  {/* ACTION MENU */}
                   <td className="relative px-5 py-4 text-center">
                     <div className="relative inline-block">
                       <IconButton
@@ -287,7 +543,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                   <button
                                     type="button"
                                     onClick={() => setMenuPage('status')}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-surface-hover"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
                                   >
                                     <span className="flex items-center gap-3">
                                       <RefreshCw className="size-4 text-blue-500" />
@@ -298,7 +554,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
                                   <button
                                     type="button"
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-surface-hover"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
                                   >
                                     <span className="flex items-center gap-3">
                                       <UserPlus className="size-4 text-muted" />
@@ -312,7 +568,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                               <button
                                 type="button"
                                 onClick={() => setMenuPage('details')}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors hover:bg-surface-hover"
+                                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
                               >
                                 <span className="flex items-center gap-3">
                                   <Eye className="size-4 text-muted" />
@@ -328,7 +584,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                   <button
                                     type="button"
                                     onClick={() => setMenuPage('delete')}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm text-red-500 transition-colors hover:bg-red-500/10"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm text-red-500 hover:bg-red-500/10"
                                   >
                                     <span className="flex items-center gap-3">
                                       <Trash2 className="size-4" />
@@ -347,7 +603,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                               <button
                                 type="button"
                                 onClick={() => setMenuPage('main')}
-                                className="mb-4 flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                                className="mb-4 flex items-center gap-2 text-sm text-muted hover:text-fg"
                               >
                                 <ArrowLeft className="size-4" />
                                 Back to Actions
@@ -413,7 +669,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                       selectedStatus,
                                     )
                                   }
-                                  className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                  className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-40"
                                 >
                                   {isUpdating ? (
                                     <span className="flex items-center gap-2">
@@ -428,7 +684,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                             </div>
                           )}
 
-                          {/* DETAILS PLACEHOLDER */}
+                          {/* DETAILS */}
                           {menuPage === 'details' && (
                             <div className="p-4">
                               <button
@@ -549,6 +805,41 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                 </tr>
               )
             })}
+
+            {/* EMPTY STATE */}
+            {filteredGlitches.length === 0 && (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-5 py-16 text-center"
+                >
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-surface">
+                      <Search className="size-5 text-muted" />
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-fg">
+                        No Glitches found
+                      </p>
+                      <p className="mt-1 text-sm text-muted">
+                        Try changing your search or filters.
+                      </p>
+                    </div>
+
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="mt-2 text-sm font-medium text-blue-500 hover:text-blue-400"
+                      >
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
