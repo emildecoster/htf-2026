@@ -1,17 +1,24 @@
-import { logout } from '#/lib/auth/auth.functions'
-import {Link, useNavigate} from '@tanstack/react-router'
-import {Activity, LayoutGrid, LogOut, type LucideIcon} from 'lucide-react'
+import { logout } from '#/lib/auth/auth.functions.ts'
+import { Link, useNavigate } from '@tanstack/react-router'
+import {
+  Activity,
+  LayoutGrid,
+  LogOut,
+  ScanEye,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 
 type NavItem = {
   label: string
   icon: LucideIcon
   /** Only set for pages that already have a route. */
-  to?: '/'
+  to?: '/' | '/report-echo'
 }
 
 const navItems: NavItem[] = [
   { label: 'Overview', icon: LayoutGrid, to: '/' },
+  { label: 'Report Echo', icon: ScanEye, to: '/report-echo' },
 ]
 
 // Icon-only items: the label lives in aria-label/title for screen readers and hover.
@@ -20,23 +27,27 @@ const itemClass =
 const activeClass = 'bg-white/10 text-white'
 
 export function Sidebar() {
-    const navigate = useNavigate()
-    const [loggingOut, setLoggingOut] = useState(false)
-    const [logoutError, setLogoutError] = useState(false)
+  const navigate = useNavigate()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState(false)
 
-    async function handleLogout() {
-      if (loggingOut) return
-      setLoggingOut(true)
-      setLogoutError(false)
-      try {
-        const result = await logout()
-        if (!result?.success) throw new Error('Logout failed')
-        await navigate({ to: '/login', replace: true })
-      } catch {
-        setLogoutError(true)
-        setLoggingOut(false)
-      }
+  async function handleLogout() {
+    if (loggingOut) return
+
+    setLoggingOut(true)
+    setLogoutError(false)
+
+    try {
+      const result = await logout()
+
+      if (!result?.success) throw new Error('Logout failed')
+
+      await navigate({ to: '/login', replace: true })
+    } catch {
+      setLogoutError(true)
+      setLoggingOut(false)
     }
+  }
 
   return (
     <aside className="sidebar">
@@ -47,6 +58,7 @@ export function Sidebar() {
       <nav className="sidebar-nav" aria-label="Main navigation">
         {navItems.map(({ label, icon: Icon, to }) => {
           const icon = <Icon className="size-6" strokeWidth={1.5} />
+
           return to ? (
             <Link
               key={label}
@@ -60,7 +72,13 @@ export function Sidebar() {
               {icon}
             </Link>
           ) : (
-            <button key={label} type="button" aria-label={label} title={label} className="sidebar-link">
+            <button
+              key={label}
+              type="button"
+              aria-label={label}
+              title={label}
+              className="sidebar-link"
+            >
               {icon}
             </button>
           )
@@ -68,7 +86,12 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar-bottom">
-        {logoutError && <span className="logout-error" role="alert">Sign out failed. Try again.</span>}
+        {logoutError && (
+          <span className="logout-error" role="alert">
+            Sign out failed. Try again.
+          </span>
+        )}
+
         <button
           type="button"
           onClick={handleLogout}
