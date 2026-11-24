@@ -6,10 +6,10 @@ import type { Glitch } from '#/lib/glitch.ts'
 const columns = ['ID', 'Description', 'Status', 'Timestamp', 'Action']
 
 const statusStyles: Record<Glitch['status'], string> = {
-  LEAKED: 'bg-red-500/10 text-red-500 border-red-500/20',
-  ASSESSING: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  CONTAINING: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  FIXED: 'bg-green-500/10 text-green-500 border-green-500/20',
+  LEAKED: 'status-leaked',
+  ASSESSING: 'status-assessing',
+  CONTAINING: 'status-containing',
+  FIXED: 'status-fixed',
 }
 
 const timestampFormat = new Intl.DateTimeFormat('en-GB', {
@@ -19,9 +19,10 @@ const timestampFormat = new Intl.DateTimeFormat('en-GB', {
 
 export function GlitchesTable({ glitches }: { glitches: Glitch[] }) {
   return (
-    <section className="flex flex-col gap-6">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[850px] text-left">
+    <section className="surface table-panel">
+      <header className="table-heading"><h2>Recent glitches</h2><span className="table-count">{glitches.length} signals</span></header>
+      <div className="table-scroll">
+        <table className="glitch-table">
           <thead>
             <tr className="border-b-2 border-line text-muted">
               {columns.map((col, i) => (
@@ -43,17 +44,17 @@ export function GlitchesTable({ glitches }: { glitches: Glitch[] }) {
                 key={glitch.glitchId}
                 className="border-b border-line transition-colors hover:bg-surface-hover"
               >
-                <td className="px-5 py-4 whitespace-nowrap">
+                <td className="glitch-id">
                   {glitch.glitchId}
                 </td>
 
-                <td className="px-5 py-4">
+                <td className="glitch-description">
                   {glitch.description}
                 </td>
 
                 <td className="px-5 py-4 whitespace-nowrap">
                   <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
+                    className={`status-pill ${
                       statusStyles[glitch.status]
                     }`}
                   >
@@ -72,8 +73,8 @@ export function GlitchesTable({ glitches }: { glitches: Glitch[] }) {
                   </time>
                 </td>
 
-                <td className="px-5 py-4 text-center">
-                  <IconButton aria-label={`${glitch.glitchId} actions`}>
+                <td className="text-center">
+                  <IconButton className="row-action" aria-label={`${glitch.glitchId} actions`}>
                     <EllipsisVertical className="size-5" />
                   </IconButton>
                 </td>

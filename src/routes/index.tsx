@@ -30,10 +30,14 @@ function OverviewPage() {
   ).length
 
   return (
-    <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-semibold text-fg">
-        Welcome, {guardian.codename}
-      </h1>
+    <div className="dashboard">
+      <header className="dashboard-heading">
+        <div>
+          <p className="dashboard-kicker">Guardian network / Achrona</p>
+          <h1 className="dashboard-title">Welcome, <span>{guardian.codename}</span></h1>
+          <p className="dashboard-subtitle">Here is the current state of the grid.</p>
+        </div>
+      </header>
 
       <MagicGauge
         magic={magic}

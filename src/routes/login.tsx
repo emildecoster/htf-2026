@@ -30,30 +30,24 @@ function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
-        <h1 className="text-3xl font-semibold">Guardian Login</h1>
+    <main className="login-page">
+      <form onSubmit={handleLogin} className="login-card">
+        <p className="login-eyebrow">GUARDIAN ACCESS</p>
+        <h1>Sign in</h1>
+        <p className="login-intro">Use your guardian codename and password.</p>
 
-        <input
-          value={codename}
-          onChange={(e) => setCodename(e.target.value)}
-          placeholder="Codename"
-          required
-        />
+        <label className="login-field">
+          <span>Codename</span>
+          <input autoComplete="username" value={codename} onChange={(e) => setCodename(e.target.value)} placeholder="Enter your codename" required />
+        </label>
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
+        <label className="login-field">
+          <span>Password</span>
+          <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
+        </label>
 
-        {error && <p className="text-red-500">{error}</p>}
-
-        <button type="submit">
-          Enter Mission Control
-        </button>
+        {error && <p className="login-error" role="alert">{error}</p>}
+        <button className="login-submit" type="submit"><span>Enter Mission Control</span><span aria-hidden="true">→</span></button>
       </form>
     </main>
   )

@@ -27,12 +27,12 @@ export function Sidebar() {
     }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar py-5">
-      <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white shadow-md shadow-black/30">
+    <aside className="sidebar">
+      <div className="sidebar-brand" aria-label="Guardians of the Grid">
         <Activity className="size-7" strokeWidth={2} />
       </div>
 
-      <nav className="flex w-full flex-1 flex-col items-center gap-1">
+      <nav className="sidebar-nav" aria-label="Main navigation">
         {navItems.map(({ label, icon: Icon, to }) => {
           const icon = <Icon className="size-6" strokeWidth={1.5} />
           return to ? (
@@ -41,27 +41,27 @@ export function Sidebar() {
               to={to}
               aria-label={label}
               title={label}
-              className={itemClass}
+              className="sidebar-link"
               activeOptions={{ exact: true }}
-              activeProps={{ className: activeClass }}
+              activeProps={{ 'data-status': 'active' }}
             >
               {icon}
             </Link>
           ) : (
-            <button key={label} type="button" aria-label={label} title={label} className={itemClass}>
+            <button key={label} type="button" aria-label={label} title={label} className="sidebar-link">
               {icon}
             </button>
           )
         })}
       </nav>
 
-      <div className="flex w-full flex-col items-center gap-4">
+      <div className="sidebar-bottom">
         <button
           type="button"
           onClick={handleLogout}
           aria-label="Logout"
           title="Logout"
-          className="flex size-10 items-center justify-center rounded-full border border-line bg-white text-fg"
+          className="sidebar-logout"
         >
           <LogOut className="size-5" />
         </button>
