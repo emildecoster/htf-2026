@@ -3,19 +3,21 @@ import { sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { GLITCH_STATUSES } from '../lib/glitch.ts'
 import { GUARDIAN_ROLES } from '../lib/guardian.ts'
 
+export const guardians = sqliteTable('guardians', {
+  guardianId: text('guardian_id').primaryKey(),
+  codename: text('codename').notNull().unique(),
+  role: text('role', { enum: GUARDIAN_ROLES }).notNull(),
+  password: text('password').notNull(),
+})
+
 export const glitches = sqliteTable('glitches', {
   glitchId: text('glitch_id').primaryKey(),
   status: text('status', { enum: GLITCH_STATUSES }).notNull(),
   description: text('description').notNull(),
   /** ISO 8601, so lexical order is chronological order. */
   timestamp: text('timestamp').notNull(),
-})
-
-export const guardians = sqliteTable('guardians', {
-  guardianId: text('guardian_id').primaryKey(),
-  codename: text('codename').notNull().unique(),
-  role: text('role', { enum: GUARDIAN_ROLES }).notNull(),
-  password: text('password').notNull(),
+  assignedGuardianId: text('assigned_guardian_id')
+    .references(() => guardians.guardianId),
 })
 
 export const echoes = sqliteTable('echoes', {

@@ -26,6 +26,8 @@ import { GLITCH_STATUSES } from '#/lib/glitch.ts'
 import {
   updateGlitchStatus,
   deleteGlitch,
+  getDefenders,
+  assignGlitch,
 } from '#/lib/glitches.functions.ts'
 
 const columns = ['ID', 'Description', 'Status', 'Timestamp', 'Action']
@@ -45,9 +47,15 @@ const timestampFormat = new Intl.DateTimeFormat('en-GB', {
 type Props = {
   glitches: Glitch[]
   isCommander: boolean
+  currentGuardianId: string | null
 }
 
-type MenuPage = 'main' | 'status' | 'delete' | 'details'
+type Defender = {
+  guardianId: string
+  codename: string
+}
+
+type MenuPage = 'main' | 'status' | 'delete' | 'details' | 'assign'
 
 type SortOption =
   | 'newest'
@@ -56,7 +64,11 @@ type SortOption =
   | 'id-desc'
   | 'status'
 
-export function GlitchesTable({ glitches, isCommander }: Props) {
+export function GlitchesTable({
+  glitches,
+  isCommander,
+  currentGuardianId,
+}: Props) {
   const router = useRouter()
 
   // Action menu
@@ -69,6 +81,10 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
     Record<string, GlitchStatus>
   >({})
 
+  // Defender assignment
+  const [defenders, setDefenders] = useState<Defender[]>([])
+  const [loadingDefenders, setLoadingDefenders] = useState(false)
+
   // Search and filters
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<
@@ -77,6 +93,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('newest')
+  const [showAssignedOnly, setShowAssignedOnly] = useState(false)
 
   const [error, setError] = useState<string | null>(null)
 
@@ -94,7 +111,6 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
       const matchesStatus =
         statusFilter === 'ALL' || glitch.status === statusFilter
 
-      // Timestamps are stored as ISO 8601 strings.
       const glitchDate = glitch.timestamp.slice(0, 10)
 
       const matchesStartDate =
@@ -103,11 +119,19 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
       const matchesEndDate =
         !endDate || glitchDate <= endDate
 
+      const matchesAssignment =
+        !showAssignedOnly ||
+        (isCommander
+          ? glitch.assignedGuardianId !== null
+          : currentGuardianId !== null &&
+            glitch.assignedGuardianId === currentGuardianId)
+
       return (
         matchesSearch &&
         matchesStatus &&
         matchesStartDate &&
-        matchesEndDate
+        matchesEndDate &&
+        matchesAssignment
       )
     })
 
@@ -135,14 +159,25 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
           return 0
       }
     })
-  }, [glitches, searchQuery, statusFilter, startDate, endDate, sortBy])
+  }, [
+    glitches,
+    searchQuery,
+    statusFilter,
+    startDate,
+    endDate,
+    sortBy,
+    showAssignedOnly,
+    isCommander,
+    currentGuardianId,
+  ])
 
   const hasActiveFilters =
     searchQuery !== '' ||
     statusFilter !== 'ALL' ||
     startDate !== '' ||
     endDate !== '' ||
-    sortBy !== 'newest'
+    sortBy !== 'newest' ||
+    showAssignedOnly
 
   function clearFilters() {
     setSearchQuery('')
@@ -150,6 +185,16 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
     setStartDate('')
     setEndDate('')
     setSortBy('newest')
+    setShowAssignedOnly(false)
+  }
+
+  // Check whether the current Guardian can change this Glitch's status.
+  function canChangeStatus(glitch: Glitch) {
+    return (
+      isCommander ||
+      (currentGuardianId !== null &&
+        glitch.assignedGuardianId === currentGuardianId)
+    )
   }
 
   // Update status
@@ -184,6 +229,8 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
   // Quick next status
   async function handleNextStatus(glitch: Glitch) {
+    if (!canChangeStatus(glitch)) return
+
     const currentIndex = GLITCH_STATUSES.indexOf(glitch.status)
 
     if (
@@ -226,6 +273,48 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
     }
   }
 
+  // Load available Defenders
+  async function handleOpenAssignment() {
+    setMenuPage('assign')
+    setLoadingDefenders(true)
+    setError(null)
+
+    try {
+      const result = await getDefenders()
+      setDefenders(result)
+    } catch (err) {
+      console.error('Failed to load Defenders:', err)
+      setError('Could not load Defenders. Please try again.')
+    } finally {
+      setLoadingDefenders(false)
+    }
+  }
+
+  // Assign or unassign a Defender
+  async function handleAssignGlitch(
+    glitchId: string,
+    guardianId: string | null,
+  ) {
+    setUpdatingId(glitchId)
+    setError(null)
+
+    try {
+      await assignGlitch({
+        data: { glitchId, guardianId },
+      })
+
+      closeMenu()
+      await router.invalidate()
+    } catch (err) {
+      console.error('Failed to assign Defender:', err)
+      setError(
+        `Could not assign Defender to ${glitchId}. Please try again.`,
+      )
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   function closeMenu() {
     setOpenMenu(null)
     setMenuPage('main')
@@ -233,7 +322,6 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
   return (
     <section className="flex flex-col gap-6">
-
       {/* Error message */}
       {error && (
         <div
@@ -254,7 +342,6 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
       {/* SEARCH AND FILTERS */}
       <div className="flex flex-col gap-4 rounded-xl border border-line bg-app p-4">
-
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
@@ -281,7 +368,6 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
         {/* Filter controls */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-
           {/* Status filter */}
           <div className="flex flex-col gap-2">
             <label
@@ -379,6 +465,31 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
           </div>
         </div>
 
+        {/* Assigned only checkbox */}
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface px-3 py-3 text-sm transition-colors hover:bg-surface-hover">
+          <input
+            type="checkbox"
+            checked={showAssignedOnly}
+            onChange={(event) =>
+              setShowAssignedOnly(event.target.checked)
+            }
+            className="size-4 rounded border-line accent-blue-500"
+          />
+
+          <span className="flex flex-col gap-0.5">
+            <span className="font-medium text-fg">
+              {isCommander
+                ? 'Show assigned Glitches only'
+                : 'Show Glitches assigned to me only'}
+            </span>
+            <span className="text-xs text-muted">
+              {isCommander
+                ? 'Hide Glitches that have no assigned Defender.'
+                : 'Hide Glitches that are assigned to other Defenders or unassigned.'}
+            </span>
+          </span>
+        </label>
+
         {/* Filter summary */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
           <p className="text-xs text-muted">
@@ -428,6 +539,10 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
             {filteredGlitches.map((glitch) => {
               const isOpen = openMenu === glitch.glitchId
               const isUpdating = updatingId === glitch.glitchId
+              const canEditStatus = canChangeStatus(glitch)
+              const isAssignedToMe =
+                currentGuardianId !== null &&
+                glitch.assignedGuardianId === currentGuardianId
 
               const currentIndex = GLITCH_STATUSES.indexOf(
                 glitch.status,
@@ -445,14 +560,40 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
               const selectedIndex =
                 GLITCH_STATUSES.indexOf(selectedStatus)
 
+              const assignedDefender = defenders.find(
+                (defender) =>
+                  defender.guardianId === glitch.assignedGuardianId,
+              )
+
               return (
                 <tr
                   key={glitch.glitchId}
-                  className="border-b border-line transition-colors hover:bg-surface-hover"
+                  className={`border-b border-line transition-colors hover:bg-surface-hover ${
+                    isAssignedToMe ? 'bg-blue-500/[0.035]' : ''
+                  }`}
                 >
-                  {/* ID */}
+                  {/* ID and assignment indicator */}
                   <td className="px-5 py-4 whitespace-nowrap">
-                    {glitch.glitchId}
+                    <div className="flex flex-col items-start gap-2">
+                      <span className="font-medium">
+                        {glitch.glitchId}
+                      </span>
+
+                      {isAssignedToMe && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[10px] font-semibold text-blue-500">
+                          <Check className="size-3" />
+                          Assigned to you
+                        </span>
+                      )}
+
+                      {isCommander &&
+                        glitch.assignedGuardianId !== null && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-1 text-[10px] font-semibold text-purple-500">
+                            <UserPlus className="size-3" />
+                            {assignedDefender?.codename ?? 'Assigned'}
+                          </span>
+                        )}
+                    </div>
                   </td>
 
                   {/* Description */}
@@ -469,7 +610,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                         {glitch.status}
                       </span>
 
-                      {isCommander && (
+                      {canEditStatus && (
                         <button
                           type="button"
                           disabled={!nextStatus || isUpdating}
@@ -530,7 +671,6 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
 
                       {isOpen && (
                         <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-line bg-app text-left shadow-xl">
-
                           {/* MAIN MENU */}
                           {menuPage === 'main' && (
                             <div className="p-2">
@@ -538,22 +678,25 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                 Glitch Actions
                               </p>
 
+                              {canEditStatus && (
+                                <button
+                                  type="button"
+                                  onClick={() => setMenuPage('status')}
+                                  className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
+                                >
+                                  <span className="flex items-center gap-3">
+                                    <RefreshCw className="size-4 text-blue-500" />
+                                    Status
+                                  </span>
+                                  <ChevronRight className="size-4 text-muted" />
+                                </button>
+                              )}
+
                               {isCommander && (
                                 <>
                                   <button
                                     type="button"
-                                    onClick={() => setMenuPage('status')}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
-                                  >
-                                    <span className="flex items-center gap-3">
-                                      <RefreshCw className="size-4 text-blue-500" />
-                                      Status
-                                    </span>
-                                    <ChevronRight className="size-4 text-muted" />
-                                  </button>
-
-                                  <button
-                                    type="button"
+                                    onClick={handleOpenAssignment}
                                     className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm hover:bg-surface-hover"
                                   >
                                     <span className="flex items-center gap-3">
@@ -562,6 +705,8 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                     </span>
                                     <ChevronRight className="size-4 text-muted" />
                                   </button>
+
+                                  <div className="my-2 border-t border-line" />
                                 </>
                               )}
 
@@ -598,7 +743,7 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                           )}
 
                           {/* STATUS SUBMENU */}
-                          {menuPage === 'status' && isCommander && (
+                          {menuPage === 'status' && canEditStatus && (
                             <div className="p-4">
                               <button
                                 type="button"
@@ -684,6 +829,101 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                             </div>
                           )}
 
+                          {/* ASSIGN GUARDIAN SUBMENU */}
+                          {menuPage === 'assign' && isCommander && (
+                            <div className="p-4">
+                              <button
+                                type="button"
+                                onClick={() => setMenuPage('main')}
+                                disabled={isUpdating}
+                                className="mb-4 flex items-center gap-2 text-sm text-muted hover:text-fg"
+                              >
+                                <ArrowLeft className="size-4" />
+                                Back to Actions
+                              </button>
+
+                              <div className="mb-4 flex items-center gap-2">
+                                <UserPlus className="size-4 text-blue-500" />
+                                <h3 className="text-sm font-semibold">
+                                  Assign Guardian
+                                </h3>
+                              </div>
+
+                              <p className="mb-3 text-xs text-muted">
+                                Select one Defender for {glitch.glitchId}.
+                              </p>
+
+                              {loadingDefenders ? (
+                                <div className="flex items-center gap-2 py-4 text-sm text-muted">
+                                  <Loader2 className="size-4 animate-spin" />
+                                  Loading Defenders...
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {defenders.map((defender) => {
+                                    const isAssigned =
+                                      glitch.assignedGuardianId ===
+                                      defender.guardianId
+
+                                    return (
+                                      <button
+                                        key={defender.guardianId}
+                                        type="button"
+                                        disabled={isUpdating || isAssigned}
+                                        onClick={() =>
+                                          handleAssignGlitch(
+                                            glitch.glitchId,
+                                            defender.guardianId,
+                                          )
+                                        }
+                                        className={`flex w-full items-center justify-between rounded-lg border px-3 py-3 text-sm transition-colors ${
+                                          isAssigned
+                                            ? 'border-blue-500/40 bg-blue-500/10 text-blue-500'
+                                            : 'border-line hover:bg-surface-hover'
+                                        } disabled:cursor-not-allowed disabled:opacity-70`}
+                                      >
+                                        <span>{defender.codename}</span>
+
+                                        {isAssigned ? (
+                                          <span className="flex items-center gap-1 text-xs">
+                                            <Check className="size-3" />
+                                            Assigned
+                                          </span>
+                                        ) : isUpdating ? (
+                                          <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                          <ChevronRight className="size-4 text-muted" />
+                                        )}
+                                      </button>
+                                    )
+                                  })}
+
+                                  {defenders.length === 0 && (
+                                    <p className="py-3 text-xs text-muted">
+                                      No Defenders found.
+                                    </p>
+                                  )}
+
+                                  {glitch.assignedGuardianId && (
+                                    <button
+                                      type="button"
+                                      disabled={isUpdating}
+                                      onClick={() =>
+                                        handleAssignGlitch(
+                                          glitch.glitchId,
+                                          null,
+                                        )
+                                      }
+                                      className="mt-3 w-full rounded-lg border border-red-500/20 px-3 py-2.5 text-xs font-medium text-red-500 hover:bg-red-500/10 disabled:opacity-50"
+                                    >
+                                      Remove Assignment
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* DETAILS */}
                           {menuPage === 'details' && (
                             <div className="p-4">
@@ -706,11 +946,15 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                               <div className="space-y-3 text-sm">
                                 <div>
                                   <p className="text-xs text-muted">Glitch ID</p>
-                                  <p className="font-medium">{glitch.glitchId}</p>
+                                  <p className="font-medium">
+                                    {glitch.glitchId}
+                                  </p>
                                 </div>
 
                                 <div>
-                                  <p className="text-xs text-muted">Description</p>
+                                  <p className="text-xs text-muted">
+                                    Description
+                                  </p>
                                   <p>{glitch.description}</p>
                                 </div>
 
@@ -724,7 +968,18 @@ export function GlitchesTable({ glitches, isCommander }: Props) {
                                 </div>
 
                                 <div>
-                                  <p className="text-xs text-muted">Timestamp</p>
+                                  <p className="text-xs text-muted">
+                                    Assigned Guardian ID
+                                  </p>
+                                  <p className="break-all">
+                                    {glitch.assignedGuardianId ?? 'Unassigned'}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs text-muted">
+                                    Timestamp
+                                  </p>
                                   <p>
                                     {timestampFormat.format(
                                       new Date(glitch.timestamp),

@@ -14,4 +14,5 @@ export type Glitch = {
   description: string
   /** ISO 8601 */
   timestamp: string
+  assignedGuardianId: string | null
 }

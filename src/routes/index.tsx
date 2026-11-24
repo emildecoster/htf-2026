@@ -1,5 +1,6 @@
 
 import { createFileRoute } from '@tanstack/react-router'
+
 import { GlitchesTable } from '#/components/GlitchesTable.tsx'
 import { MagicGauge } from '#/components/MagicGauge.tsx'
 import { getGlitches } from '#/lib/glitches.functions.ts'
@@ -21,6 +22,8 @@ export const Route = createFileRoute('/')({
 function OverviewPage() {
   const { glitches, guardian } = Route.useLoaderData()
 
+  const isCommander = guardian?.role === 'COMMANDER'
+
   const magic = calculateMagic(glitches)
 
   const activeGlitches = glitches.filter(
@@ -29,9 +32,17 @@ function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-semibold text-fg">
-        Overview
-      </h1>
+      <div>
+        <h1 className="text-3xl font-semibold text-fg">
+          Overview
+        </h1>
+
+        {!isCommander && guardian && (
+          <p className="mt-2 text-sm text-muted">
+            Welcome, {guardian.codename}. You can view all Glitches and manage the ones assigned to you.
+          </p>
+        )}
+      </div>
 
       <MagicGauge
         magic={magic}
@@ -40,7 +51,8 @@ function OverviewPage() {
 
       <GlitchesTable
         glitches={glitches}
-        isCommander={guardian?.role === 'COMMANDER'}
+        isCommander={isCommander}
+        currentGuardianId={guardian?.guardianId ?? null}
       />
     </div>
   )
