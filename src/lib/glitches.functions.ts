@@ -17,8 +17,19 @@ export const getGlitches = createServerFn({ method: 'GET' }).handler(
     }
 
     return db
-      .select()
+      .select({
+        glitchId: glitches.glitchId,
+        status: glitches.status,
+        description: glitches.description,
+        timestamp: glitches.timestamp,
+        assignedGuardianId: glitches.assignedGuardianId,
+        assignedGuardianCodename: guardians.codename,
+      })
       .from(glitches)
+      .leftJoin(
+        guardians,
+        eq(glitches.assignedGuardianId, guardians.guardianId),
+      )
       .orderBy(desc(glitches.timestamp))
       .all()
   },

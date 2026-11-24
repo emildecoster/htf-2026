@@ -18,7 +18,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Control Center' },
+      { title: 'Guardians of the Grid | Mission Control' },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
@@ -27,7 +27,7 @@ export const Route = createRootRoute({
 })
 
 function AppLayout() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const isLoginPage = useRouterState({
     select: (state) => state.location.pathname === '/login',
   })
@@ -38,7 +38,29 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        void navigator.serviceWorker.register('/sw.js').catch(() => {})
+      }, { once: true })
+    }
+    const syncNetworkState = () => {
+      document.documentElement.dataset.network = navigator.onLine ? 'online' : 'offline'
+    }
+    syncNetworkState()
+    window.addEventListener('online', syncNetworkState)
+    window.addEventListener('offline', syncNetworkState)
+    return () => {
+      window.removeEventListener('online', syncNetworkState)
+      window.removeEventListener('offline', syncNetworkState)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Apply the theme to the document and body so native controls and
+    // the full page background switch together (not just the React shell).
     document.documentElement.dataset.theme = theme
+    document.body.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
     window.localStorage.setItem('htf-theme', theme)
   }, [theme])
 

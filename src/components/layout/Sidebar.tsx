@@ -2,7 +2,7 @@ import { logout } from '#/lib/auth/auth.functions.ts'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Activity,
-  LayoutGrid,
+  LayoutDashboard,
   LogOut,
   ScanEye,
   type LucideIcon,
@@ -12,19 +12,13 @@ import { useState } from 'react'
 type NavItem = {
   label: string
   icon: LucideIcon
-  /** Only set for pages that already have a route. */
-  to?: '/' | '/report-echo'
+  to: '/' | '/report-echo'
 }
 
 const navItems: NavItem[] = [
-  { label: 'Overview', icon: LayoutGrid, to: '/' },
+  { label: 'Overview', icon: LayoutDashboard, to: '/' },
   { label: 'Report Echo', icon: ScanEye, to: '/report-echo' },
 ]
-
-// Icon-only items: the label lives in aria-label/title for screen readers and hover.
-const itemClass =
-  'flex size-12 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white'
-const activeClass = 'bg-white/10 text-white'
 
 export function Sidebar() {
   const navigate = useNavigate()
@@ -33,15 +27,11 @@ export function Sidebar() {
 
   async function handleLogout() {
     if (loggingOut) return
-
     setLoggingOut(true)
     setLogoutError(false)
-
     try {
       const result = await logout()
-
       if (!result?.success) throw new Error('Logout failed')
-
       await navigate({ to: '/login', replace: true })
     } catch {
       setLogoutError(true)
@@ -51,57 +41,36 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand" aria-label="Guardians of the Grid">
-        <Activity className="size-7" strokeWidth={2} />
-      </div>
+      <Link to="/" className="sidebar-brand" aria-label="Guardians of the Grid">
+        <span className="sidebar-brand-mark"><Activity size={23} /></span>
+        <span className="sidebar-brand-copy">
+          <strong>GUARDIANS</strong>
+          <strong>OF THE GRID</strong>
+        </span>
+      </Link>
 
+      <div className="sidebar-section-label">MISSION SYSTEMS</div>
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {navItems.map(({ label, icon: Icon, to }) => {
-          const icon = <Icon className="size-6" strokeWidth={1.5} />
-
-          return to ? (
-            <Link
-              key={label}
-              to={to}
-              aria-label={label}
-              title={label}
-              className="sidebar-link"
-              activeOptions={{ exact: true }}
-              activeProps={{ 'data-status': 'active' }}
-            >
-              {icon}
-            </Link>
-          ) : (
-            <button
-              key={label}
-              type="button"
-              aria-label={label}
-              title={label}
-              className="sidebar-link"
-            >
-              {icon}
-            </button>
-          )
-        })}
+        {navItems.map(({ label, icon: Icon, to }) => (
+          <Link
+            key={label}
+            to={to}
+            activeOptions={{ exact: true }}
+            activeProps={{ 'data-status': 'active' }}
+            className="sidebar-link"
+          >
+            <Icon size={19} strokeWidth={1.8} />
+            <span>{label}</span>
+            {label === 'Overview' && <i className="sidebar-link-indicator" />}
+          </Link>
+        ))}
       </nav>
 
       <div className="sidebar-bottom">
-        {logoutError && (
-          <span className="logout-error" role="alert">
-            Sign out failed. Try again.
-          </span>
-        )}
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          aria-label="Logout"
-          title={loggingOut ? 'Signing out…' : 'Sign out'}
-          disabled={loggingOut}
-          aria-busy={loggingOut}
-          className="sidebar-logout"
-        >
-          <LogOut className="size-5" />
+        {logoutError && <span className="logout-error" role="alert">Sign out failed. Try again.</span>}
+        <button type="button" onClick={handleLogout} disabled={loggingOut} className="sidebar-logout">
+          <LogOut size={18} />
+          <span>{loggingOut ? 'Signing out…' : 'Sign out'}</span>
         </button>
       </div>
     </aside>

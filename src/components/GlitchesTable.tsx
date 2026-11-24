@@ -563,11 +563,6 @@ export function GlitchesTable({
               const selectedIndex =
                 GLITCH_STATUSES.indexOf(selectedStatus)
 
-              const assignedDefender = defenders.find(
-                (defender) =>
-                  defender.guardianId === glitch.assignedGuardianId,
-              )
-
               return (
                 <tr
                   key={glitch.glitchId}
@@ -593,7 +588,7 @@ export function GlitchesTable({
                         glitch.assignedGuardianId !== null && (
                           <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-1 text-[10px] font-semibold text-purple-500">
                             <UserPlus className="size-3" />
-                            {assignedDefender?.codename ?? 'Assigned'}
+                            {glitch.assignedGuardianCodename ?? 'Unknown Defender'}
                           </span>
                         )}
                     </div>

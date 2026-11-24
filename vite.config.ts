@@ -1,11 +1,10 @@
+
 import { defineConfig, type Rolldown } from 'vite'
 import { devtools } from '@tanstack/devtools-vite'
-
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-
+import { nitro } from 'nitro/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { nitro } from 'nitro/vite'
 
 const IGNORED_SERVER_WARNINGS = new Set([
   'EVAL',
@@ -15,26 +14,26 @@ const IGNORED_SERVER_WARNINGS = new Set([
   'MODULE_LEVEL_DIRECTIVE',
 ])
 
-const config = defineConfig({
-  resolve: { tsconfigPaths: true },
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     devtools(),
+    tanstackStart(),
     nitro({
       rollupConfig: {
         external: [/^@sentry\//],
-        // Overrides nitro's own onwarn, so its default ignore list is repeated here.
-        // MODULE_LEVEL_DIRECTIVE: "use client" in @tanstack/react-router is irrelevant
-        // in the server bundle (no React Server Components), so the warning is noise.
-        onwarn(warning: Rolldown.RolldownLog, warn: Rolldown.LoggingFunction) {
+        onwarn(
+          warning: Rolldown.RolldownLog,
+          warn: Rolldown.LoggingFunction,
+        ) {
           if (IGNORED_SERVER_WARNINGS.has(warning.code ?? '')) return
           warn(warning)
         },
       },
     }),
     tailwindcss(),
-    tanstackStart(),
     viteReact(),
   ],
 })
-
-export default config
