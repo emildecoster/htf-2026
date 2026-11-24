@@ -1,5 +1,6 @@
-import {Link} from '@tanstack/react-router'
-import {Activity, LayoutGrid, User, type LucideIcon} from 'lucide-react'
+import { logout } from '#/lib/auth/auth.functions'
+import {Link, useNavigate} from '@tanstack/react-router'
+import {Activity, LayoutGrid, LogOut, type LucideIcon} from 'lucide-react'
 
 type NavItem = {
   label: string
@@ -18,6 +19,13 @@ const itemClass =
 const activeClass = 'bg-white/10 text-white'
 
 export function Sidebar() {
+    const navigate = useNavigate()
+
+    async function handleLogout() {
+      await logout()
+      await navigate({ to: '/login' })
+    }
+
   return (
     <aside className="sticky top-0 flex h-screen w-20 shrink-0 flex-col items-center bg-sidebar py-5">
       <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-accent-from to-accent-to text-white shadow-md shadow-black/30">
@@ -50,11 +58,12 @@ export function Sidebar() {
       <div className="flex w-full flex-col items-center gap-4">
         <button
           type="button"
-          aria-label="User menu"
-          title="User menu"
-          className="flex size-10 items-center justify-center rounded-full border border-line bg-white text-fg transition-colors hover:bg-subtle"
+          onClick={handleLogout}
+          aria-label="Logout"
+          title="Logout"
+          className="flex size-10 items-center justify-center rounded-full border border-line bg-white text-fg"
         >
-          <User className="size-5" strokeWidth={1.75} />
+          <LogOut className="size-5" />
         </button>
       </div>
     </aside>

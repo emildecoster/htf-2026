@@ -3,6 +3,7 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  useRouterState,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -24,10 +25,14 @@ export const Route = createRootRoute({
 })
 
 function AppLayout() {
+  const isLoginPage = useRouterState({
+    select: (state) => state.location.pathname === '/login',
+  })
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="min-w-0 flex-1 px-16 py-10">
+      {!isLoginPage && <Sidebar />}
+      <main className={isLoginPage ? 'min-w-0 flex-1' : 'min-w-0 flex-1 px-16 py-10'}>
         <Outlet />
       </main>
     </div>
