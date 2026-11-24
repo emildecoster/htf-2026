@@ -13,8 +13,9 @@ export const glitches = sqliteTable('glitches', {
 
 export const guardians = sqliteTable('guardians', {
   guardianId: text('guardian_id').primaryKey(),
-  codename: text('codename').notNull(),
+  codename: text('codename').notNull().unique(),
   role: text('role', { enum: GUARDIAN_ROLES }).notNull(),
+  password: text('password').notNull(),
 })
 
 export const echoes = sqliteTable('echoes', {

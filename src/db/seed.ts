@@ -9,10 +9,10 @@ const glitchRows: (typeof glitches.$inferInsert)[] = [
 ]
 
 const guardianRows: (typeof guardians.$inferInsert)[] = [
-  { guardianId: 'GD-0001', codename: 'ShadowFox', role: 'DEFENDER' },
-  { guardianId: 'GD-0002', codename: 'IronClad', role: 'DEFENDER' },
-  { guardianId: 'GD-0003', codename: 'SilverHawk', role: 'COMMANDER' },
-  { guardianId: 'GD-0004', codename: 'NightOwl', role: 'COMMANDER' },
+  { guardianId: 'GD-0001', codename: 'ShadowFox', role: 'DEFENDER', password: 'shadowfox123' },
+  { guardianId: 'GD-0002', codename: 'IronClad', role: 'DEFENDER', password: 'ironclad123' },
+  { guardianId: 'GD-0003', codename: 'SilverHawk', role: 'COMMANDER', password: 'silverhawk123' },
+  { guardianId: 'GD-0004', codename: 'NightOwl', role: 'COMMANDER', password: 'nightowl123' },
 ]
 
 const echoRows: (typeof echoes.$inferInsert)[] = [
